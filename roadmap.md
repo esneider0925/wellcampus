@@ -4,4 +4,4 @@
 - [x] Crear las pantallas Hoy, Progreso, Meta y Perfil.
 - [x] Conectar metas y perfil con los datos privados del estudiante.
 - [x] Añadir recordatorios configurables y notificaciones.
-- [ ] Validar móvil, escritorio, compilación y consola.
+- [x] Validar móvil, escritorio, compilación y consola.
