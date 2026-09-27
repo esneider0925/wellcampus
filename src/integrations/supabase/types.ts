@@ -179,9 +179,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      super_grant_admin: { Args: { _email: string }; Returns: undefined }
+      super_list_admins: {
+        Args: never
+        Returns: {
+          email: string
+          granted_at: string
+          role: string
+          user_id: string
+        }[]
+      }
+      super_revoke_admin: { Args: { _user_id: string }; Returns: undefined }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -309,7 +320,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "super_admin"],
     },
   },
 } as const
