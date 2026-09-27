@@ -9,4 +9,5 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Keep Simón Vital as a single responsive student experience backed by Lovable Cloud; health records stay user-owned under row-level access controls.
+- Keep WellCampus as a single responsive student experience backed by Lovable Cloud; health records, goals, and profiles stay user-owned under row-level access controls.
+- Use in-app tabs for Hoy, Progreso, Meta, and Perfil so authenticated student data remains in one continuous experience.
