@@ -74,6 +74,28 @@ function Index() {
     });
   }, [session]);
 
+  useEffect(() => {
+    const raw = localStorage.getItem("wellcampus-reminder");
+    if (!raw) return;
+    try {
+      const reminder = JSON.parse(raw) as { enabled?: boolean; time?: string };
+      if (!reminder.enabled || !reminder.time) return;
+      const [hours, minutes] = reminder.time.split(":").map(Number);
+      if (hours === undefined || minutes === undefined || Number.isNaN(hours) || Number.isNaN(minutes)) return;
+      const next = new Date();
+      next.setHours(hours, minutes, 0, 0);
+      if (next.getTime() <= Date.now()) next.setDate(next.getDate() + 1);
+      const timer = window.setTimeout(() => {
+        const message = "Es momento de registrar tus hábitos de hoy.";
+        setNotice(message);
+        if ("Notification" in window && Notification.permission === "granted") new Notification("WellCampus", { body: message });
+      }, next.getTime() - Date.now());
+      return () => window.clearTimeout(timer);
+    } catch {
+      localStorage.removeItem("wellcampus-reminder");
+    }
+  }, [showReminders]);
+
   if (!authReady) return <div className="grid min-h-screen place-items-center bg-background"><LoaderCircle className="size-7 animate-spin text-primary" /></div>;
   if (!session) return <AuthScreen />;
 
@@ -122,7 +144,7 @@ function TodayScreen({ entries, todayEntry, score, streak, onRegister, onGoProgr
     <section className="grid gap-4 lg:grid-cols-[1.4fr_1fr]"><motion.article initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="overflow-hidden rounded-lg bg-primary p-6 text-primary-foreground md:p-8"><div className="flex items-start justify-between gap-4"><div><p className="text-sm font-semibold opacity-75">Balance de hoy</p><h2 className="mt-1 text-3xl font-bold">{todayEntry ? `${score}% en equilibrio` : "Tu día está por comenzar"}</h2></div><div className="animate-breathe grid size-16 shrink-0 place-items-center rounded-full border-4 border-primary-foreground/25 text-lg font-extrabold">{score}</div></div><p className="mt-8 max-w-lg text-sm leading-6 opacity-80">{todayEntry ? "Cada elección suma. Celebra el progreso, no la perfección." : "Registra tus hábitos para recibir una lectura clara de tu bienestar diario."}</p><div className="mt-6 h-2 overflow-hidden rounded-full bg-primary-foreground/15"><motion.div initial={{ width: 0 }} animate={{ width: `${score}%` }} transition={{ duration: .8 }} className="h-full rounded-full bg-gold" /></div></motion.article>
       <article className="rounded-lg border border-border bg-card p-6"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">Racha actual</p><h2 className="mt-1 text-3xl font-bold">{streak} {streak === 1 ? "día" : "días"}</h2></div><div className="grid size-14 place-items-center rounded-full bg-secondary text-primary"><Flame className="size-7" /></div></div><div className="mt-7 flex gap-2">{Array.from({ length: 7 }).map((_, i) => <div key={i} className={cn("h-2 flex-1 rounded-full", i < Math.min(streak, 7) ? "bg-primary" : "bg-muted")} />)}</div><p className="mt-3 text-xs text-muted-foreground">La constancia construye hábitos sostenibles.</p></article></section>
     <section className="mt-8"><div className="mb-4 flex items-end justify-between"><div><p className="text-xs font-bold uppercase text-primary">Las cinco dimensiones</p><h2 className="mt-1 text-2xl font-bold">Tu panorama diario</h2></div><span className="text-xs text-muted-foreground">Meta recomendada</span></div><div className="grid grid-cols-2 gap-3 md:grid-cols-5">{habits.map((habit, index) => { const value = todayEntry ? Number(todayEntry[habit.key]) : 0; const Icon = habit.icon; return <motion.article key={habit.key} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .07 * index }} whileHover={{ y: -4 }} className="rounded-lg border border-border bg-card p-4 shadow-sm"><div className={cn("mb-5 grid size-10 place-items-center rounded-md", habit.tone)}><Icon className="size-5" /></div><p className="text-xs font-semibold text-muted-foreground">{habit.label}</p><p className="mt-1 text-xl font-extrabold">{value} <span className="text-xs font-medium text-muted-foreground">{habit.unit}</span></p><Progress value={Math.min((value / habit.max) * 100, 100)} className="mt-4" /></motion.article>; })}</div></section>
-    <section className="mt-8 grid gap-4 md:grid-cols-2"><article className="rounded-lg border border-border bg-card p-6"><div className="flex items-center gap-3"><Target className="text-primary" /><h2 className="text-xl font-bold">Meta de esta semana</h2></div><p className="mt-4 text-sm text-muted-foreground">Completa al menos cuatro registros para reconocer patrones.</p><div className="mt-5 flex items-center gap-3"><Progress value={Math.min(weekCount * 25, 100)} /><span className="text-sm font-bold">{Math.min(weekCount, 4)}/4</span></div></article><button type="button" onClick={onGoProgress} className="rounded-lg border border-border bg-secondary/55 p-6 text-left transition-colors hover:bg-secondary"><div className="flex items-center gap-3"><Award className="text-primary" /><h2 className="text-xl font-bold">Próximo logro</h2></div><p className="mt-4 text-sm text-muted-foreground">“Primera semana consciente” se desbloquea con una racha de 7 días.</p><div className="mt-5 flex items-center justify-between text-sm"><span className="font-semibold text-primary">{streak} de 7 días</span><ChevronRight className="size-4 text-primary" /></div></button></section>
+    <section className="mt-8 grid gap-4 md:grid-cols-2"><article className="rounded-lg border border-border bg-card p-6"><div className="flex items-center gap-3"><Target className="text-primary" /><h2 className="text-xl font-bold">Meta de esta semana</h2></div><p className="mt-4 text-sm text-muted-foreground">Completa al menos cuatro registros para reconocer patrones.</p><div className="mt-5 flex items-center gap-3"><Progress value={Math.min(weekCount * 25, 100)} /><span className="text-sm font-bold">{Math.min(weekCount, 4)}/4</span></div></article><Button type="button" variant="ghost" onClick={onGoProgress} className="h-auto items-stretch justify-start rounded-lg border border-border bg-secondary/55 p-6 text-left hover:bg-secondary"><div className="w-full"><div className="flex items-center gap-3"><Award className="text-primary" /><h2 className="text-xl font-bold">Próximo logro</h2></div><p className="mt-4 whitespace-normal text-sm font-normal text-muted-foreground">“Primera semana consciente” se desbloquea con una racha de 7 días.</p><div className="mt-5 flex items-center justify-between text-sm"><span className="font-semibold text-primary">{streak} de 7 días</span><ChevronRight className="size-4 text-primary" /></div></div></Button></section>
   </>;
 }
 
