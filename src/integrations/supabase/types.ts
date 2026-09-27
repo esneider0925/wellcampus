@@ -14,7 +14,111 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      goals: {
+        Row: {
+          active: boolean
+          created_at: string
+          habit_type: string
+          id: string
+          target_value: number
+          unit: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          habit_type: string
+          id?: string
+          target_value: number
+          unit: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          habit_type?: string
+          id?: string
+          target_value?: number
+          unit?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      habit_entries: {
+        Row: {
+          activity_minutes: number
+          created_at: string
+          entry_date: string
+          id: string
+          note: string
+          nutrition_score: number
+          sleep_hours: number
+          stress_level: number
+          updated_at: string
+          user_id: string
+          water_glasses: number
+        }
+        Insert: {
+          activity_minutes?: number
+          created_at?: string
+          entry_date?: string
+          id?: string
+          note?: string
+          nutrition_score?: number
+          sleep_hours?: number
+          stress_level?: number
+          updated_at?: string
+          user_id: string
+          water_glasses?: number
+        }
+        Update: {
+          activity_minutes?: number
+          created_at?: string
+          entry_date?: string
+          id?: string
+          note?: string
+          nutrition_score?: number
+          sleep_hours?: number
+          stress_level?: number
+          updated_at?: string
+          user_id?: string
+          water_glasses?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          program: string
+          semester: number | null
+          study_shift: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string
+          id: string
+          program?: string
+          semester?: number | null
+          study_shift?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          program?: string
+          semester?: number | null
+          study_shift?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
