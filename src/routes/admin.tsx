@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { LogOut, ShieldCheck, Users, CalendarCheck, Activity, Search } from "lucide-react";
+import { LogOut, ShieldCheck, Users, CalendarCheck, Activity, Search, UserPlus, Trash2, Crown } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar,
 } from "recharts";
@@ -40,11 +40,14 @@ type Status = "loading" | "signedOut" | "forbidden" | "admin";
 
 function AdminPage() {
   const [status, setStatus] = useState<Status>("loading");
+  const [isSuper, setIsSuper] = useState(false);
 
   const check = useCallback(async () => {
     const { data } = await supabase.auth.getUser();
     if (!data.user) return setStatus("signedOut");
     const { data: ok } = await supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
+    const { data: sup } = await supabase.rpc("has_role", { _user_id: data.user.id, _role: "super_admin" });
+    setIsSuper(!!sup);
     setStatus(ok ? "admin" : "forbidden");
   }, []);
 
@@ -71,7 +74,7 @@ function AdminPage() {
         </div>
       </Center>
     );
-  return <Dashboard onSignOut={signOut} />;
+  return <Dashboard onSignOut={signOut} isSuper={isSuper} />;
 }
 
 function Center({ children }: { children: React.ReactNode }) {
@@ -118,7 +121,7 @@ function AdminLogin() {
 
 const fmt = (n: number | null | undefined) => (n == null ? "—" : Number(n).toLocaleString("es-CO"));
 
-function Dashboard({ onSignOut }: { onSignOut: () => void }) {
+function Dashboard({ onSignOut, isSuper }: { onSignOut: () => void; isSuper: boolean }) {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [days, setDays] = useState<DayRow[]>([]);
   const [query, setQuery] = useState("");
@@ -248,6 +251,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
             </table>
           </div>
         </section>
+        {isSuper && <AdminManager />}
       </main>
     </div>
   );
@@ -259,5 +263,54 @@ function ChartCard({ title, children }: { title: string; children: React.ReactEl
       <h3 className="mb-3 text-sm font-semibold">{title}</h3>
       <div className="h-56"><ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer></div>
     </div>
+  );
+}
+
+type AdminRow = { user_id: string; email: string; role: string; granted_at: string };
+
+function AdminManager() {
+  const [rows, setRows] = useState<AdminRow[]>([]);
+  const [email, setEmail] = useState("");
+  const [msg, setMsg] = useState("");
+  const load = useCallback(async () => {
+    const { data } = await supabase.rpc("super_list_admins");
+    setRows((data ?? []) as AdminRow[]);
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+
+  const grant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { error } = await supabase.rpc("super_grant_admin", { _email: email });
+    setMsg(error ? (error.message.includes("not_found") ? "Ese correo no está registrado en WellCampus." : "No se pudo asignar.") : "Administrador asignado.");
+    if (!error) { setEmail(""); void load(); }
+  };
+  const revoke = async (id: string) => {
+    const { error } = await supabase.rpc("super_revoke_admin", { _user_id: id });
+    setMsg(error ? "No se pudo retirar el permiso." : "Permiso retirado.");
+    void load();
+  };
+  const admins = rows.filter((r) => r.role === "admin");
+  const supers = new Set(rows.filter((r) => r.role === "super_admin").map((r) => r.user_id));
+
+  return (
+    <section className="rounded-2xl border bg-card p-4">
+      <h2 className="mb-1 flex items-center gap-2 font-semibold"><Crown className="h-4 w-4 text-primary" />Gestión de administradores</h2>
+      <p className="mb-4 text-xs text-muted-foreground">Solo el súper administrador puede asignar o retirar este permiso. La cuenta debe estar registrada.</p>
+      <form onSubmit={grant} className="mb-3 flex flex-wrap gap-2">
+        <Input type="email" required placeholder="correo@unisimon.edu.co" value={email} onChange={(e) => setEmail(e.target.value)} className="max-w-xs" />
+        <Button type="submit"><UserPlus className="mr-2 h-4 w-4" />Asignar administrador</Button>
+      </form>
+      {msg && <p className="mb-3 text-sm text-muted-foreground">{msg}</p>}
+      <ul className="divide-y">
+        {admins.map((a) => (
+          <li key={a.user_id} className="flex items-center justify-between py-2 text-sm">
+            <span>{a.email} {supers.has(a.user_id) && <span className="ml-2 rounded bg-primary/10 px-2 py-0.5 text-xs text-primary">Súper admin</span>}</span>
+            {!supers.has(a.user_id) && (
+              <Button variant="ghost" size="sm" onClick={() => revoke(a.user_id)}><Trash2 className="h-4 w-4" /></Button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
