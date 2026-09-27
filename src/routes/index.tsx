@@ -43,6 +43,27 @@ const habits = [
   { key: "stress_level", type: "stress", label: "Estrés", unit: "de 5", icon: HeartPulse, tone: "bg-wine-soft text-wine", max: 5, defaultGoal: 2 },
 ] as const;
 
+function AnimatedIcon({ children, delay = 0, className }: { children: React.ReactNode; delay?: number; className?: string }) {
+  return (
+    <motion.span
+      initial={{ scale: 0, rotate: -20 }}
+      animate={{ scale: 1, rotate: 0 }}
+      transition={{ type: "spring", stiffness: 260, damping: 14, delay }}
+      whileHover={{ scale: 1.15, rotate: 8 }}
+      whileTap={{ scale: 0.9 }}
+      className={cn("inline-grid place-items-center", className)}
+    >
+      <motion.span
+        animate={{ y: [0, -3, 0] }}
+        transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay }}
+        className="grid place-items-center"
+      >
+        {children}
+      </motion.span>
+    </motion.span>
+  );
+}
+
 function Index() {
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
