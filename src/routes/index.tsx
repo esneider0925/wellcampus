@@ -76,12 +76,12 @@ function Index() {
 
   useEffect(() => {
     const raw = localStorage.getItem("wellcampus-reminder");
-    if (!raw) return;
+    if (!raw) return undefined;
     try {
       const reminder = JSON.parse(raw) as { enabled?: boolean; time?: string };
-      if (!reminder.enabled || !reminder.time) return;
+      if (!reminder.enabled || !reminder.time) return undefined;
       const [hours, minutes] = reminder.time.split(":").map(Number);
-      if (hours === undefined || minutes === undefined || Number.isNaN(hours) || Number.isNaN(minutes)) return;
+      if (hours === undefined || minutes === undefined || Number.isNaN(hours) || Number.isNaN(minutes)) return undefined;
       const next = new Date();
       next.setHours(hours, minutes, 0, 0);
       if (next.getTime() <= Date.now()) next.setDate(next.getDate() + 1);
@@ -93,6 +93,7 @@ function Index() {
       return () => window.clearTimeout(timer);
     } catch {
       localStorage.removeItem("wellcampus-reminder");
+      return undefined;
     }
   }, [showReminders]);
 
