@@ -69,7 +69,7 @@ function Index() {
     ]).then(([entryResult, goalResult, profileResult]) => {
       setEntries((entryResult.data ?? []) as Entry[]);
       setGoals((goalResult.data ?? []) as Goal[]);
-      const fallback = { id: session.user.id, full_name: String(session.user.user_metadata?.full_name ?? ""), program: "", semester: null, study_shift: null };
+      const fallback = { id: session.user.id, full_name: String(session.user.user_metadata?.["full_name"] ?? ""), program: "", semester: null, study_shift: null };
       setProfile((profileResult.data as Profile | null) ?? fallback);
     });
   }, [session]);
@@ -115,7 +115,7 @@ function Index() {
   );
 }
 
-function TodayScreen({ entries, todayEntry, score, streak, onRegister, onGoProgress }: { entries: Entry[]; todayEntry?: Entry; score: number; streak: number; onRegister: () => void; onGoProgress: () => void }) {
+function TodayScreen({ entries, todayEntry, score, streak, onRegister, onGoProgress }: { entries: Entry[]; todayEntry: Entry | undefined; score: number; streak: number; onRegister: () => void; onGoProgress: () => void }) {
   const weekCount = entries.filter(e => daysAgo(e.entry_date) < 7).length;
   return <>
     <section className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end"><div><p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase text-primary"><Sparkles className="size-4" /> Tu bienestar, hoy</p><h1 className="text-3xl font-bold md:text-5xl">Hola, ¿cómo te sientes?</h1><p className="mt-2 text-sm text-muted-foreground">Un registro breve puede transformar tu semana.</p></div><Button size="lg" onClick={onRegister} className="h-12 shadow-lg shadow-primary/15"><Plus /> Registrar mi día</Button></section>
@@ -140,7 +140,7 @@ function GoalsScreen({ session, goals, onSaved }: { session: Session; goals: Goa
   const initial = Object.fromEntries(habits.map(h => [h.type, goals.find(g => g.habit_type === h.type)?.target_value ?? h.defaultGoal]));
   const [values, setValues] = useState<Record<string, number>>(initial);
   const [busy, setBusy] = useState(false);
-  async function save(event: FormEvent) { event.preventDefault(); setBusy(true); const payload = habits.map(h => ({ user_id: session.user.id, habit_type: h.type, target_value: values[h.type], unit: h.unit, active: true })); const { data, error } = await supabase.from("goals").upsert(payload, { onConflict: "user_id,habit_type" }).select(); setBusy(false); if (!error) onSaved((data ?? []) as Goal[]); }
+  async function save(event: FormEvent) { event.preventDefault(); setBusy(true); const payload = habits.map(h => ({ user_id: session.user.id, habit_type: h.type, target_value: values[h.type] ?? h.defaultGoal, unit: h.unit, active: true })); const { data, error } = await supabase.from("goals").upsert(payload, { onConflict: "user_id,habit_type" }).select(); setBusy(false); if (!error) onSaved((data ?? []) as Goal[]); }
   return <><PageIntro eyebrow="Tu dirección" title="Metas personales" description="Define objetivos realistas para avanzar a tu ritmo y mantener hábitos sostenibles." />
     <form onSubmit={save}><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{habits.map((habit, index) => { const Icon = habit.icon; return <motion.article key={habit.type} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * .05 }} className="rounded-lg border border-border bg-card p-5"><div className="flex items-center gap-3"><div className={cn("grid size-10 place-items-center rounded-md", habit.tone)}><Icon className="size-5" /></div><div><h2 className="font-bold">{habit.label}</h2><p className="text-xs text-muted-foreground">Objetivo diario</p></div></div><div className="mt-6 flex items-end gap-3"><Input aria-label={`Meta de ${habit.label}`} type="number" min={habit.type === "stress" || habit.type === "nutrition" ? 1 : 0} max={habit.max} step={habit.type === "sleep" ? .5 : 1} value={values[habit.type]} onChange={e => setValues({ ...values, [habit.type]: Number(e.target.value) })} className="h-12 text-lg font-bold" /><span className="pb-3 text-sm text-muted-foreground">{habit.unit}</span></div></motion.article>; })}</div><div className="mt-6 flex justify-end"><Button size="lg" disabled={busy}>{busy ? <LoaderCircle className="animate-spin" /> : <Check />}Guardar metas</Button></div></form>
     <section className="mt-8 rounded-lg bg-secondary p-6"><div className="flex gap-4"><div className="grid size-11 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground"><Target /></div><div><h2 className="font-bold">Metas que cuidan de ti</h2><p className="mt-1 text-sm leading-6 text-muted-foreground">Puedes ajustarlas en cualquier momento. Para el estrés, un valor menor representa una mejor meta.</p></div></div></section>
