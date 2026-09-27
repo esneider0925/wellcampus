@@ -77,11 +77,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Simón Vital | Bienestar estudiantil" },
-      { name: "description", content: "Monitorea tus hábitos saludables y construye bienestar durante tu vida universitaria." },
+      { title: "WellCampus | Bienestar universitario" },
+      { name: "description", content: "Monitorea tus hábitos saludables, metas y progreso en la Universidad Simón Bolívar." },
       { name: "author", content: "Universidad Simón Bolívar" },
-      { property: "og:title", content: "Simón Vital | Bienestar estudiantil" },
-      { property: "og:description", content: "Una experiencia para acompañar los hábitos saludables de estudiantes universitarios." },
+      { property: "og:title", content: "WellCampus | Bienestar universitario" },
+      { property: "og:description", content: "Bienestar y hábitos saludables para estudiantes de la Universidad Simón Bolívar." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -104,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="es">
       <head>
         <HeadContent />
       </head>
